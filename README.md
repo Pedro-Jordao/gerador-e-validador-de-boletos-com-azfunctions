@@ -13,6 +13,18 @@ Após a geração, é possível validar o código por meio de uma API e destacar
 
 ---
 
+## 💻 Tecnologias Utilizadas
+
+- .NET 8 com Azure Functions (C#) (isolated worker)
+- HTML5, CSS e JavaScript (interface)
+- GitHub Copilot (auxílio no desenvolvimento)
+- Visual Studio (backend/API)
+- VS Code com extensão Live Server (frontend/UI)
+- Azure Service Bus
+- Postman
+
+---
+
 ## 📷 Evidências Visuais
 
 ### 1. Envio de dados para geração (`/barcode-generate` via Postman)
@@ -91,17 +103,7 @@ Após a geração, é possível validar o código por meio de uma API e destacar
 
 ---
 
-## 💻 Tecnologias Utilizadas
 
-- .NET 8 com Azure Functions (C#) (isolated worker)
-- HTML5, CSS e JavaScript (interface)
-- GitHub Copilot (auxílio no desenvolvimento)
-- Visual Studio (backend/API)
-- VS Code com extensão Live Server (frontend/UI)
-- Azure Service Bus
-- Postman
-
----
 
 ## 🧾 Notas Finais
 
