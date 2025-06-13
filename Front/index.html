@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Código de Barras</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .barcode-text {
+            font-family: monospace;
+            margin: 10px 0;
+            word-break: break-all;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .barcode-image {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+        .valid {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .invalid {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .validate-button {
+            background-color: #28a745;
+            margin-top: 10px;
+            display: none;
+        }
+        .validate-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerador de Código de Barras</h1>
+        <div class="form-group">
+            <label for="dataVencimento">Data de Vencimento:</label>
+            <input type="date" id="dataVencimento" required>
+        </div>
+        <div class="form-group">
+            <label for="valor">Valor (R$):</label>
+            <input type="number" id="valor" step="0.01" min="0" required>
+        </div>
+        <button onclick="gerarCodigoBarras()">Gerar Código de Barras</button>
+        
+        <div id="resultado" class="result">
+            <h3>Código de Barras Gerado:</h3>
+            <div class="barcode-text" id="barcodeText"></div>
+            <img id="barcodeImage" class="barcode-image" alt="Código de Barras">
+            <button onclick="validarCodigoBarras()" class="validate-button" id="validateButton">Validar Código de Barras</button>
+        </div>
+    </div>
+
+    <script>
+        async function gerarCodigoBarras() {
+            const dataVencimento = document.getElementById('dataVencimento').value;
+            const valor = parseFloat(document.getElementById('valor').value);
+
+            if (!dataVencimento || !valor) {
+                alert('Por favor, preencha todos os campos!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:7146/api/barcode-generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        dataVencimento: dataVencimento,
+                        valor: valor
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao gerar código de barras');
+                }
+
+                const data = await response.json();
+                
+                // Exibir o resultado
+                document.getElementById('resultado').style.display = 'block';
+                document.getElementById('barcodeText').textContent = data.barcode;
+                document.getElementById('barcodeImage').src = `data:image/png;base64,${data.imagemBase64}`;
+                document.getElementById('validateButton').style.display = 'block';
+                
+                // Limpar classes de validação anteriores
+                const barcodeText = document.getElementById('barcodeText');
+                barcodeText.classList.remove('valid', 'invalid');
+            } catch (error) {
+                alert('Erro ao gerar código de barras: ' + error.message);
+            }
+        }
+
+        async function validarCodigoBarras() {
+            const barcode = document.getElementById('barcodeText').textContent;
+            
+            try {
+                const response = await fetch('http://localhost:7023/api/barcode-validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        barcode: barcode
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao validar código de barras');
+                }
+
+                const data = await response.json();
+                const barcodeText = document.getElementById('barcodeText');
+                
+                // Remover classes anteriores
+                barcodeText.classList.remove('valid', 'invalid');
+                
+                // Adicionar classe baseada no resultado
+                if (data === false) {
+                    barcodeText.classList.add('invalid');
+                } else {
+                    barcodeText.classList.add('valid');
+                }
+            } catch (error) {
+                alert('Erro ao validar código de barras: ' + error.message);
+            }
+        }
+
+        // Definir a data mínima como hoje
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dataVencimento').min = today;
+    </script>
+</body>
+</html>
